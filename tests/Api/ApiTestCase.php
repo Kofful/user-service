@@ -11,6 +11,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 class ApiTestCase extends WebTestCase
 {
     protected readonly UserRepository $userRepository;
+    protected const ADMIN_ID = 1;
+    protected const USER_ID = 3;
 
     public function __construct(
     ) {
@@ -26,5 +28,17 @@ class ApiTestCase extends WebTestCase
         $command = $application->find('doctrine:fixtures:load');
         $commandTester = new CommandTester($command);
         $commandTester->execute([]);
+    }
+
+    protected function loginAsAdmin(): void
+    {
+        $testUser = $this->userRepository->find(self::ADMIN_ID);
+        $this->getClient()->loginUser($testUser);
+    }
+
+    protected function loginAsUser(): void
+    {
+        $testUser = $this->userRepository->find(self::USER_ID);
+        $this->getClient()->loginUser($testUser);
     }
 }

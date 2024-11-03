@@ -3,9 +3,11 @@
 namespace App\Repository;
 
 use App\Dto\Auth\LoginDto;
+use App\Dto\User\GetUsersDto;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
@@ -17,6 +19,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 {
     public function __construct(
         ManagerRegistry $registry,
+        private readonly UserPasswordHasherInterface $passwordHasher,
     ) {
         parent::__construct($registry, User::class);
     }
@@ -47,5 +50,14 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             'login' => $user->getLogin(),
             'password' => $user->getPassword(),
         ]);
+    }
+
+    public function getUsers(?GetUsersDto $getUsersDto): array
+    {
+        $criteria = ['login' => $getUsersDto?->login];
+        // remove empty fields
+        $criteria = array_filter($criteria, fn($value) => !is_null($value));
+
+        return $this->findBy($criteria);
     }
 }

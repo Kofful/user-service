@@ -114,4 +114,12 @@ class UserController extends AbstractController
             ['groups' => 'get_user'],
         );
     }
+
+    #[Route('/{id}', name: 'delete', methods: 'DELETE')]
+    public function delete(User $user): JsonResponse
+    {
+        $this->userRepository->deleteUser($user);
+
+        return $this->json(['code' => Response::HTTP_OK]);
+    }
 }

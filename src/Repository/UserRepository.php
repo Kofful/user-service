@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Dto\Auth\LoginDto;
+use App\Dto\User\CreateUserDto;
 use App\Dto\User\GetUsersDto;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -59,5 +60,25 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $criteria = array_filter($criteria, fn($value) => !is_null($value));
 
         return $this->findBy($criteria);
+    }
+
+    public function createUserEntityFromDto(CreateUserDto $createUserDto): User
+    {
+        $user = new User();
+        $user->setLogin($createUserDto->login);
+        $user->setPhone($createUserDto->phone);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $createUserDto->pass);
+        $user->setPassword($hashedPassword);
+
+        return $user;
+    }
+
+    public function saveUser(User $user): User
+    {
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+
+        return $user;
     }
 }

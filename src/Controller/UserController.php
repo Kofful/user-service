@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\User\CreateUserDto;
 use App\Dto\User\GetUsersDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
@@ -10,9 +11,12 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/users', 'users_')]
 class UserController extends AbstractController
@@ -57,6 +61,28 @@ class UserController extends AbstractController
         return $this->json(
             $user,
             Response::HTTP_OK,
+            [],
+            ['groups' => 'get_user'],
+        );
+    }
+
+    #[Route('', name: 'create', methods: 'POST')]
+    public function create(#[MapRequestPayload] CreateUserDto $createUserDto, ValidatorInterface $validator): JsonResponse
+    {
+        $user = $this->userRepository->createUserEntityFromDto($createUserDto);
+        $this->denyAccessUnlessGranted('edit', $user, "You don't have permission to this login");
+
+        $errors = $validator->validate($user);
+        if (count($errors) > 0) {
+            $firstError = $errors[0];
+            throw new UnprocessableEntityHttpException($firstError->getMessage());
+        }
+
+        $user = $this->userRepository->saveUser($user);
+
+        return $this->json(
+            $user,
+            Response::HTTP_CREATED,
             [],
             ['groups' => 'get_user'],
         );

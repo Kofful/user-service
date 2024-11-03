@@ -74,6 +74,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $user;
     }
 
+    public function updateUserEntityFromDto(CreateUserDto $createUserDto, User $user): User
+    {
+        $user->setLogin($createUserDto->login);
+        $user->setPhone($createUserDto->phone);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $createUserDto->pass);
+        $user->setPassword($hashedPassword);
+
+        return $user;
+    }
+
     public function saveUser(User $user): User
     {
         $this->getEntityManager()->persist($user);

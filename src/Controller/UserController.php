@@ -87,4 +87,31 @@ class UserController extends AbstractController
             ['groups' => 'get_user'],
         );
     }
+
+    #[Route('/{id}', name: 'update', methods: 'PUT')]
+    #[IsGranted('edit', 'user', message: "You don't have permission to edit this login")]
+    public function update(
+        #[MapRequestPayload] CreateUserDto $createUserDto,
+        ValidatorInterface $validator,
+        User $user,
+    ): JsonResponse
+    {
+        $user = $this->userRepository->updateUserEntityFromDto($createUserDto, $user);
+        $this->denyAccessUnlessGranted('edit', $user, "You don't have permission to set this login");
+
+        $errors = $validator->validate($user);
+        if (count($errors) > 0) {
+            $firstError = $errors[0];
+            throw new UnprocessableEntityHttpException($firstError->getMessage());
+        }
+
+        $user = $this->userRepository->saveUser($user);
+
+        return $this->json(
+            $user,
+            Response::HTTP_OK,
+            [],
+            ['groups' => 'get_user'],
+        );
+    }
 }

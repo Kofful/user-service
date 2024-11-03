@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Dto\Auth\LoginDto;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -32,5 +33,19 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setPassword($newHashedPassword);
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
+    }
+
+    public function checkLoginCredentials(LoginDto $loginDto): ?User
+    {
+        $user = new User();
+        $user->setLogin($loginDto->login);
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $loginDto->pass);
+        $user->setPassword($hashedPassword);
+
+        return $this->findOneBy([
+            'login' => $user->getLogin(),
+            'password' => $user->getPassword(),
+        ]);
     }
 }

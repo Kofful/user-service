@@ -20,11 +20,6 @@ doctrine:
                 prefix: 'App\Entity'
                 alias: App
 
-when@test:
-    doctrine:
-        dbal:
-            dbname_suffix: '_test'
-
 when@prod:
     doctrine:
         orm:
